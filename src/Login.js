@@ -1,18 +1,36 @@
-import React from "react";
+import React, { useEffect } from "react";
 import "./Login.css";
 import { auth, provider } from "./firebase";
-// import { useStateValue } from "./StateProvider";
-import { actionTypes } from "./reducer";
 import { Button } from "@mui/material";
-import { useStateValue } from "./StateProvider"
+import { useStateValue } from "./StateProvider";
+import { actionTypes } from "./reducer";
 
 function Login() {
   const [{}, dispatch] = useStateValue();
+
+  // Check for login status in localStorage when the component mounts
+  useEffect(() => {
+    const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+    if (isLoggedIn) {
+      // User is logged in, dispatch action to set user
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (user) {
+        dispatch({
+          type: actionTypes.SET_USER,
+          user: user,
+        });
+      }
+    }
+  }, [dispatch]);
 
   const signIn = () => {
     auth
       .signInWithPopup(provider)
       .then((result) => {
+        // Store the user data in localStorage
+        localStorage.setItem("isLoggedIn", "true");
+        localStorage.setItem("user", JSON.stringify(result.user));
+
         dispatch({
           type: actionTypes.SET_USER,
           user: result.user,
